@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyAnimeList Analysis Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+         background: #0f0f23; color: #e0e0e0; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1a1a3e 0%, #2d2d6b 50%, #1a1a3e 100%);
+            padding: 60px 20px; text-align: center; border-bottom: 3px solid #4a4aff; }
+  .header h1 { font-size: 2.8em; color: #fff; margin-bottom: 10px;
+               text-shadow: 0 0 20px rgba(74,74,255,0.5); }
+  .header p { font-size: 1.2em; color: #aaa; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px; margin: 30px 0; }
+  .stat-card { background: #1a1a3e; border-radius: 12px; padding: 20px;
+               text-align: center; border: 1px solid #2d2d6b;
+               transition: transform 0.2s; }
+  .stat-card:hover { transform: translateY(-3px); }
+  .stat-card .value { font-size: 1.8em; font-weight: bold; color: #4a9eff; }
+  .stat-card .label { font-size: 0.9em; color: #888; margin-top: 5px; }
+  .chart-section { background: #1a1a3e; border-radius: 12px; margin: 30px 0;
+                   padding: 25px; border: 1px solid #2d2d6b; }
+  .chart-section h2 { color: #4a9eff; margin-bottom: 10px; font-size: 1.5em; }
+  .chart-section p { color: #999; margin-bottom: 15px; font-size: 0.95em; }
+  .chart-section img { width: 100%; border-radius: 8px; background: white; }
+  .footer { text-align: center; padding: 40px; color: #555; }
+  .toc { background: #1a1a3e; border-radius: 12px; padding: 25px;
+         margin: 30px 0; border: 1px solid #2d2d6b; }
+  .toc h2 { color: #4a9eff; margin-bottom: 15px; }
+  .toc a { color: #7a7aff; text-decoration: none; display: block; padding: 4px 0; }
+  .toc a:hover { color: #aaaaff; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📊 MyAnimeList Analysis Report</h1>
+  <p>Comprehensive analysis of 29,786 anime from MAL's top ranked list</p>
+</div>
+<div class="container">
+
+<div class="stats-grid">
+<div class="stat-card"><div class="value">29,786</div><div class="label">Total Anime</div></div>
+<div class="stat-card"><div class="value">19,545 (65.6%)</div><div class="label">With Scores</div></div>
+<div class="stat-card"><div class="value">22,428</div><div class="label">With Rankings</div></div>
+<div class="stat-card"><div class="value">9</div><div class="label">Unique Types</div></div>
+<div class="stat-card"><div class="value">1917-2028</div><div class="label">Year Range</div></div>
+<div class="stat-card"><div class="value">1.89 — 9.28</div><div class="label">Score Range</div></div>
+<div class="stat-card"><div class="value">6.39</div><div class="label">Avg Score</div></div>
+<div class="stat-card"><div class="value">6.36</div><div class="label">Median Score</div></div>
+<div class="stat-card"><div class="value">1,154,098,907</div><div class="label">Total Members (sum)</div></div>
+<div class="stat-card"><div class="value">21</div><div class="label">Unique Genres</div></div>
+<div class="stat-card"><div class="value">1346</div><div class="label">Unique Studios</div></div>
+</div>
+<div class="toc"><h2>📋 Table of Contents</h2>
+<a href="#01_missing_data">• Missing Data Overview</a>
+<a href="#02_score_distribution">• Score Distribution</a>
+<a href="#03_score_percentiles">• Score Percentiles</a>
+<a href="#04_type_breakdown">• Type Breakdown</a>
+<a href="#05_temporal_trends">• Temporal Trends</a>
+<a href="#06_decade_analysis">• Decade Analysis</a>
+<a href="#07_seasonal_patterns">• Seasonal Patterns</a>
+<a href="#08_genre_analysis">• Genre Analysis</a>
+<a href="#09_genre_cooccurrence">• Genre Co-occurrence Heatmap</a>
+<a href="#10_genre_trends">• Genre Trends Over Decades</a>
+<a href="#11_studio_analysis">• Studio Analysis</a>
+<a href="#12_popularity_vs_quality">• Popularity vs Quality</a>
+<a href="#13_most_popular">• Most Popular Anime</a>
+<a href="#14_episodes_duration">• Episodes & Duration Analysis</a>
+<a href="#15_source_material">• Source Material Analysis</a>
+<a href="#16_rating_analysis">• Age Rating Analysis</a>
+<a href="#17_top25_anime">• Top 25 Anime</a>
+<a href="#18_bottom25_anime">• Bottom 25 Anime</a>
+<a href="#19_hidden_gems">• Hidden Gems vs Overrated</a>
+<a href="#20_themes_analysis">• Themes Analysis</a>
+<a href="#21_correlations">• Correlation Matrix</a>
+<a href="#22_status_breakdown">• Status Breakdown</a>
+</div>
+
+    <div class="chart-section" id="01_missing_data">
+      <h2>Missing Data Overview</h2>
+      <p>17 columns have missing values. 'season' and 'year' are most sparse (only available for ~6.4K entries).</p>
+      <img src="01_missing_data.png" alt="Missing Data Overview" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="02_score_distribution">
+      <h2>Score Distribution</h2>
+      <p>Mean score: 6.39, Median: 6.36. Scores are left-skewed, clustering around 6-7.</p>
+      <img src="02_score_distribution.png" alt="Score Distribution" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="03_score_percentiles">
+      <h2>Score Percentiles</h2>
+      <p>Top 1% of anime have a score ≥ 8.43. Bottom 1% score ≤ 4.37.</p>
+      <img src="03_score_percentiles.png" alt="Score Percentiles" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="04_type_breakdown">
+      <h2>Type Breakdown</h2>
+      <p>Most common type: TV (8,611). Highest avg score type: TV.</p>
+      <img src="04_type_breakdown.png" alt="Type Breakdown" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="05_temporal_trends">
+      <h2>Temporal Trends</h2>
+      <p>Anime production peaked in 2017 with 1,267 titles.</p>
+      <img src="05_temporal_trends.png" alt="Temporal Trends" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="06_decade_analysis">
+      <h2>Decade Analysis</h2>
+      <p>The 2010s and 2020s saw an explosion of anime production.</p>
+      <img src="06_decade_analysis.png" alt="Decade Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="07_seasonal_patterns">
+      <h2>Seasonal Patterns</h2>
+      <p>Analysis of anime releases by season (winter, spring, summer, fall).</p>
+      <img src="07_seasonal_patterns.png" alt="Seasonal Patterns" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="08_genre_analysis">
+      <h2>Genre Analysis</h2>
+      <p>Most common genre: Comedy (7,929). Highest rated genre: Award Winning.</p>
+      <img src="08_genre_analysis.png" alt="Genre Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="09_genre_cooccurrence">
+      <h2>Genre Co-occurrence Heatmap</h2>
+      <p>Shows how often the top genres appear together on the same anime.</p>
+      <img src="09_genre_cooccurrence.png" alt="Genre Co-occurrence Heatmap" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="10_genre_trends">
+      <h2>Genre Trends Over Decades</h2>
+      <p>How the popularity of top genres has shifted across decades.</p>
+      <img src="10_genre_trends.png" alt="Genre Trends Over Decades" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="11_studio_analysis">
+      <h2>Studio Analysis</h2>
+      <p>Most prolific studio: Toei Animation (927 anime). Highest rated: Shuka.</p>
+      <img src="11_studio_analysis.png" alt="Studio Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="12_popularity_vs_quality">
+      <h2>Popularity vs Quality</h2>
+      <p>Correlation between log(members) and score: r=0.676. More popular anime tend to have higher scores.</p>
+      <img src="12_popularity_vs_quality.png" alt="Popularity vs Quality" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="13_most_popular">
+      <h2>Most Popular Anime</h2>
+      <p>Most popular: Shingeki no Kyojin (4,304,264 members).</p>
+      <img src="13_most_popular.png" alt="Most Popular Anime" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="14_episodes_duration">
+      <h2>Episodes & Duration Analysis</h2>
+      <p>Median episode count: 2.</p>
+      <img src="14_episodes_duration.png" alt="Episodes & Duration Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="15_source_material">
+      <h2>Source Material Analysis</h2>
+      <p>Most common source: Original (12,761).</p>
+      <img src="15_source_material.png" alt="Source Material Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="16_rating_analysis">
+      <h2>Age Rating Analysis</h2>
+      <p>Score distributions vary by content rating.</p>
+      <img src="16_rating_analysis.png" alt="Age Rating Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="17_top25_anime">
+      <h2>Top 25 Anime</h2>
+      <p>#1: Sousou no Frieren (9.28).</p>
+      <img src="17_top25_anime.png" alt="Top 25 Anime" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="18_bottom25_anime">
+      <h2>Bottom 25 Anime</h2>
+      <p>Lowest rated: Tenkuu Danzai Skelter+Heaven (1.89).</p>
+      <img src="18_bottom25_anime.png" alt="Bottom 25 Anime" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="19_hidden_gems">
+      <h2>Hidden Gems vs Overrated</h2>
+      <p>Left: High quality, low popularity. Right: Very popular but lower scores.</p>
+      <img src="19_hidden_gems.png" alt="Hidden Gems vs Overrated" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="20_themes_analysis">
+      <h2>Themes Analysis</h2>
+      <p>Most common theme: Music (5,372).</p>
+      <img src="20_themes_analysis.png" alt="Themes Analysis" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="21_correlations">
+      <h2>Correlation Matrix</h2>
+      <p>Members, scored_by, and favorites are highly correlated. Score shows moderate positive correlation with popularity metrics.</p>
+      <img src="21_correlations.png" alt="Correlation Matrix" loading="lazy">
+    </div>
+    
+
+    <div class="chart-section" id="22_status_breakdown">
+      <h2>Status Breakdown</h2>
+      <p>Distribution of anime by airing status.</p>
+      <img src="22_status_breakdown.png" alt="Status Breakdown" loading="lazy">
+    </div>
+    
+
+</div>
+<div class="footer">
+  <p>Generated with Python · pandas · matplotlib · seaborn</p>
+</div>
+</body></html>

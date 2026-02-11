@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAL Anime Analysis Report</title>
+<style>
+  :root { --bg: #FAFAFA; --text: #333; --accent: #2C5F8A; --border: #E0E0E0;
+          --card-bg: #FFF; --subtle: #777; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Georgia", "Times New Roman", serif; background: var(--bg);
+         color: var(--text); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 2em; color: var(--accent); border-bottom: 2px solid var(--accent);
+       padding-bottom: 12px; margin-bottom: 8px; }
+  h1 small { font-size: 0.5em; font-weight: normal; color: var(--subtle); display: block; margin-top: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           gap: 12px; margin: 24px 0 36px; }
+  .stat { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+          padding: 16px 12px; text-align: center; }
+  .stat .val { font-size: 1.5em; font-weight: bold; color: var(--accent); }
+  .stat .lbl { font-size: 0.8em; color: var(--subtle); margin-top: 2px; }
+  .toc { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+         padding: 20px 24px; margin-bottom: 36px; }
+  .toc h2 { font-size: 1.1em; color: var(--accent); margin-bottom: 10px; }
+  .toc a { color: var(--accent); text-decoration: none; display: block; padding: 3px 0;
+           font-size: 0.95em; }
+  .toc a:hover { text-decoration: underline; }
+  .figure { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+            margin: 28px 0; overflow: hidden; }
+  .figure .caption { padding: 16px 20px 12px; }
+  .figure h3 { font-size: 1.1em; color: var(--accent); margin-bottom: 4px; }
+  .figure p { font-size: 0.9em; color: var(--subtle); }
+  .figure img { width: 100%; display: block; border-top: 1px solid var(--border); }
+  .footer { text-align: center; color: var(--subtle); font-size: 0.85em; margin-top: 48px;
+            padding-top: 20px; border-top: 1px solid var(--border); }
+</style></head><body>
+<h1>MyAnimeList — Comprehensive Statistical Analysis<small>29,786 anime · 23 figures · publication-quality visualizations</small></h1>
+<div class="stats">
+<div class="stat"><div class="val">29,786</div><div class="lbl">Total Anime</div></div>
+<div class="stat"><div class="val">19,545</div><div class="lbl">Scored Anime</div></div>
+<div class="stat"><div class="val">1917–2028</div><div class="lbl">Year Range</div></div>
+<div class="stat"><div class="val">6.39</div><div class="lbl">Mean Score</div></div>
+<div class="stat"><div class="val">6.36</div><div class="lbl">Median Score</div></div>
+<div class="stat"><div class="val">21</div><div class="lbl">Unique Genres</div></div>
+<div class="stat"><div class="val">1346</div><div class="lbl">Unique Studios</div></div>
+<div class="stat"><div class="val">1.15B</div><div class="lbl">Total Members</div></div>
+</div><div class="toc"><h2>Table of Contents</h2>
+<a href="#fig01_missing_data">Fig. 1 — Data Completeness Profile</a>
+<a href="#fig02_score_distribution">Fig. 2 — Distribution of Anime Scores</a>
+<a href="#fig03_score_by_type">Fig. 3 — Score Distribution by Anime Type</a>
+<a href="#fig04_type_breakdown">Fig. 4 — Anime Type Composition and Quality</a>
+<a href="#fig05_temporal_trends">Fig. 5 — Anime Production Volume and Score Trend</a>
+<a href="#fig06_decade_ridgeline">Fig. 6 — Score Distributions by Decade</a>
+<a href="#fig07_seasonal">Fig. 7 — Seasonal Release Patterns</a>
+<a href="#fig08_genre_analysis">Fig. 8 — Genre Frequency and Quality Analysis</a>
+<a href="#fig09_genre_cooccurrence">Fig. 9 — Genre Co-occurrence Heatmap</a>
+<a href="#fig10_genre_trends">Fig. 10 — Genre Temporal Evolution</a>
+<a href="#fig11_studio_analysis">Fig. 11 — Studio Analysis</a>
+<a href="#fig12_popularity_vs_quality">Fig. 12 — Popularity–Quality Relationship</a>
+<a href="#fig13_top25">Fig. 13 — Top 25 Highest-Rated Anime</a>
+<a href="#fig14_most_popular">Fig. 14 — Most Popular Anime by Membership</a>
+<a href="#fig15_episodes_score">Fig. 15 — Episode Count Analysis</a>
+<a href="#fig16_source_material">Fig. 16 — Quality by Source Material</a>
+<a href="#fig17_age_rating">Fig. 17 — Score by Content Rating</a>
+<a href="#fig18_hidden_gems">Fig. 18 — Hidden Gems vs Highly Popular Low-Rated Titles</a>
+<a href="#fig19_themes">Fig. 19 — Anime Theme Analysis</a>
+<a href="#fig20_correlations">Fig. 20 — Correlation Matrix</a>
+<a href="#fig21_status">Fig. 21 — Score by Airing Status</a>
+<a href="#fig22_wordcloud">Fig. 22 — Synopsis Word Cloud</a>
+<a href="#fig23_members_distribution">Fig. 23 — Community Size Distribution</a>
+</div>
+<div class="figure" id="fig01_missing_data">
+    <div class="caption"><h3>Figure 1. Data Completeness Profile</h3><p>Percentage of missing values across 27 features. 'season' and 'year' columns exhibit the highest missingness (~78%).</p></div>
+    <img src="fig01_missing_data.png" alt="Data Completeness Profile" loading="lazy"></div>
+<div class="figure" id="fig02_score_distribution">
+    <div class="caption"><h3>Figure 2. Distribution of Anime Scores</h3><p>Left-skewed distribution (skew = -0.01) with mean 6.39 and median 6.36, indicating a concentration of moderately rated titles.</p></div>
+    <img src="fig02_score_distribution.png" alt="Distribution of Anime Scores" loading="lazy"></div>
+<div class="figure" id="fig03_score_by_type">
+    <div class="caption"><h3>Figure 3. Score Distribution by Anime Type</h3><p>Violin-box hybrid plot showing score distributions across anime types. Movies exhibit the widest variance, while TV series cluster around 6–7.</p></div>
+    <img src="fig03_score_by_type.png" alt="Score Distribution by Anime Type" loading="lazy"></div>
+<div class="figure" id="fig04_type_breakdown">
+    <div class="caption"><h3>Figure 4. Anime Type Composition and Quality</h3><p>Left: type distribution (n = 29,786). Right: mean score with standard deviation error bars.</p></div>
+    <img src="fig04_type_breakdown.png" alt="Anime Type Composition and Quality" loading="lazy"></div>
+<div class="figure" id="fig05_temporal_trends">
+    <div class="caption"><h3>Figure 5. Anime Production Volume and Score Trend</h3><p>Dual-axis plot showing production count (blue) and mean score with ±1σ band (red). Production peaked in 2017.</p></div>
+    <img src="fig05_temporal_trends.png" alt="Anime Production Volume and Score Trend" loading="lazy"></div>
+<div class="figure" id="fig06_decade_ridgeline">
+    <div class="caption"><h3>Figure 6. Score Distributions by Decade</h3><p>Ridgeline (joy) plot showing how the score distribution evolved across decades.</p></div>
+    <img src="fig06_decade_ridgeline.png" alt="Score Distributions by Decade" loading="lazy"></div>
+<div class="figure" id="fig07_seasonal">
+    <div class="caption"><h3>Figure 7. Seasonal Release Patterns</h3><p>Left: anime count per season. Right: score violin plots by season of release.</p></div>
+    <img src="fig07_seasonal.png" alt="Seasonal Release Patterns" loading="lazy"></div>
+<div class="figure" id="fig08_genre_analysis">
+    <div class="caption"><h3>Figure 8. Genre Frequency and Quality Analysis</h3><p>Left: top 20 genres by count. Right: highest-rated genres with ±1σ error bars. Most prevalent genre: Comedy.</p></div>
+    <img src="fig08_genre_analysis.png" alt="Genre Frequency and Quality Analysis" loading="lazy"></div>
+<div class="figure" id="fig09_genre_cooccurrence">
+    <div class="caption"><h3>Figure 9. Genre Co-occurrence Heatmap</h3><p>Lower-triangle heatmap of genre pair frequencies among the 12 most common genres.</p></div>
+    <img src="fig09_genre_cooccurrence.png" alt="Genre Co-occurrence Heatmap" loading="lazy"></div>
+<div class="figure" id="fig10_genre_trends">
+    <div class="caption"><h3>Figure 10. Genre Temporal Evolution</h3><p>Stacked area chart (3-year rolling average) showing the rise of Action and Comedy-tagged titles.</p></div>
+    <img src="fig10_genre_trends.png" alt="Genre Temporal Evolution" loading="lazy"></div>
+<div class="figure" id="fig11_studio_analysis">
+    <div class="caption"><h3>Figure 11. Studio Analysis</h3><p>Lollipop charts comparing studio output volume (left) and average rating (right). Most prolific: Toei Animation.</p></div>
+    <img src="fig11_studio_analysis.png" alt="Studio Analysis" loading="lazy"></div>
+<div class="figure" id="fig12_popularity_vs_quality">
+    <div class="caption"><h3>Figure 12. Popularity–Quality Relationship</h3><p>Hexbin density plots with OLS regression. Members–Score: r = 0.676; Favorites–Score: r = 0.666. Both statistically significant (p < 0.001).</p></div>
+    <img src="fig12_popularity_vs_quality.png" alt="Popularity–Quality Relationship" loading="lazy"></div>
+<div class="figure" id="fig13_top25">
+    <div class="caption"><h3>Figure 13. Top 25 Highest-Rated Anime</h3><p>Ranked by MAL weighted score. #1: Sousou no Frieren (9.28).</p></div>
+    <img src="fig13_top25.png" alt="Top 25 Highest-Rated Anime" loading="lazy"></div>
+<div class="figure" id="fig14_most_popular">
+    <div class="caption"><h3>Figure 14. Most Popular Anime by Membership</h3><p>Bar color encodes score. Most popular: Shingeki no Kyojin (4,304,264 members).</p></div>
+    <img src="fig14_most_popular.png" alt="Most Popular Anime by Membership" loading="lazy"></div>
+<div class="figure" id="fig15_episodes_score">
+    <div class="caption"><h3>Figure 15. Episode Count Analysis</h3><p>Median episode count: 2. Longer series (27–52 eps) tend to score slightly higher.</p></div>
+    <img src="fig15_episodes_score.png" alt="Episode Count Analysis" loading="lazy"></div>
+<div class="figure" id="fig16_source_material">
+    <div class="caption"><h3>Figure 16. Quality by Source Material</h3><p>Bubble-lollipop chart; size reflects the number of titles from each source.</p></div>
+    <img src="fig16_source_material.png" alt="Quality by Source Material" loading="lazy"></div>
+<div class="figure" id="fig17_age_rating">
+    <div class="caption"><h3>Figure 17. Score by Content Rating</h3><p>Violin plots with inner quartile lines. R-rated and PG-13 anime show the broadest score ranges.</p></div>
+    <img src="fig17_age_rating.png" alt="Score by Content Rating" loading="lazy"></div>
+<div class="figure" id="fig18_hidden_gems">
+    <div class="caption"><h3>Figure 18. Hidden Gems vs Highly Popular Low-Rated Titles</h3><p>Left: high-quality anime with below-median popularity. Right: widely-known anime with sub-7 scores.</p></div>
+    <img src="fig18_hidden_gems.png" alt="Hidden Gems vs Highly Popular Low-Rated Titles" loading="lazy"></div>
+<div class="figure" id="fig19_themes">
+    <div class="caption"><h3>Figure 19. Anime Theme Analysis</h3><p>Most common theme: Music. Themes like historical and psychological tend to score higher.</p></div>
+    <img src="fig19_themes.png" alt="Anime Theme Analysis" loading="lazy"></div>
+<div class="figure" id="fig20_correlations">
+    <div class="caption"><h3>Figure 20. Correlation Matrix</h3><p>members, scored_by, and favorites are highly inter-correlated. Score shows moderate positive association with popularity indicators.</p></div>
+    <img src="fig20_correlations.png" alt="Correlation Matrix" loading="lazy"></div>
+<div class="figure" id="fig21_status">
+    <div class="caption"><h3>Figure 21. Score by Airing Status</h3><p>Comparison of mean and median scores across airing statuses.</p></div>
+    <img src="fig21_status.png" alt="Score by Airing Status" loading="lazy"></div>
+<div class="figure" id="fig22_wordcloud">
+    <div class="caption"><h3>Figure 22. Synopsis Word Cloud</h3><p>Word cloud derived from all non-null synopsis fields, excluding common English stopwords.</p></div>
+    <img src="fig22_wordcloud.png" alt="Synopsis Word Cloud" loading="lazy"></div>
+<div class="figure" id="fig23_members_distribution">
+    <div class="caption"><h3>Figure 23. Community Size Distribution</h3><p>Log-normal distribution of member counts. Median: 1,067.</p></div>
+    <img src="fig23_members_distribution.png" alt="Community Size Distribution" loading="lazy"></div>
+<div class="footer">
+Generated with Python · pandas · matplotlib · seaborn · scipy<br>
+Data source: MyAnimeList (via Jikan API v4) · 29,786 entries
+</div></body></html>
