@@ -1,0 +1,530 @@
+\documentclass[11pt, a4paper]{article}
+
+% ─── Packages ────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.4cm, top=2.8cm, bottom=2.8cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{parskip}
+\usepackage{microtype}
+\usepackage{abstract}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{natbib}
+
+% ─── Colors ──────────────────────────────────────────────────────────────────
+\definecolor{accent}{HTML}{2C5F8A}
+\definecolor{darkgray}{HTML}{333333}
+\definecolor{midgray}{HTML}{666666}
+\definecolor{lightgray}{HTML}{F5F5F5}
+
+% ─── Hyperlinks ──────────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=accent,
+    citecolor=accent,
+    urlcolor=accent,
+    pdftitle={A Quantitative Analysis of 29,786 Anime Titles on MyAnimeList},
+    pdfauthor={Eeman Majumder},
+}
+
+% ─── Section styling ─────────────────────────────────────────────────────────
+\titleformat{\section}{\Large\bfseries\color{accent}}{\thesection}{1em}{}[\vspace{-0.3em}\color{accent}\rule{\textwidth}{0.4pt}]
+\titleformat{\subsection}{\large\bfseries\color{darkgray}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{midgray}}{\thesubsubsection}{1em}{}
+
+% ─── Header / Footer ────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\textcolor{midgray}{MAL Anime Analysis}}
+\fancyhead[R]{\small\textcolor{midgray}{February 2026}}
+\fancyfoot[C]{\small\textcolor{midgray}{Page \thepage\ of \pageref{LastPage}}}
+
+% ─── Caption styling ─────────────────────────────────────────────────────────
+\captionsetup{
+    font=small,
+    labelfont={bf, color=accent},
+    textfont={color=darkgray},
+    margin=1cm,
+    skip=8pt,
+}
+
+% ─── Convenience ─────────────────────────────────────────────────────────────
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\tabref}[1]{Table~\ref{#1}}
+\newcommand{\secref}[1]{Section~\ref{#1}}
+
+\graphicspath{{figures/}}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Title ───────────────────────────────────────────────────────────────────
+\begin{center}
+    {\LARGE\bfseries\color{accent} A Quantitative Analysis of 29,786 Anime Titles\\[0.3em] on MyAnimeList}\\[1.2em]
+    {\large Eeman Majumder}\\[0.5em]
+    {\normalsize\textcolor{midgray}{February 2026}}\\[0.3em]
+    {\small\textcolor{midgray}{Data source: MyAnimeList via Jikan API v4 $\cdot$ 29,786 entries $\cdot$ 24 features}}
+\end{center}
+
+\vspace{1em}
+
+% ─── Abstract ────────────────────────────────────────────────────────────────
+\begin{abstract}
+\noindent
+This report presents a comprehensive exploratory data analysis of 29,786 anime titles scraped from MyAnimeList (MAL), the world's largest anime community platform. Using the Jikan API~(v4), we collected 24 features per title spanning metadata, community engagement metrics, and categorical taxonomies. Our analysis reveals structural patterns in anime production, scoring behavior, genre evolution, and the relationship between popularity and perceived quality. Key findings include a strong left-skew in score distributions ($\mu = 6.39$, median $= 6.36$), exponential growth in anime production peaking in 2017, a moderate positive correlation between community size and score ($r = 0.676$), and significant variation in quality across genres, studios, and source materials. We identify both ``hidden gems'' (high-quality, low-visibility titles) and overrated entries, providing actionable insights for recommendation systems and industry analysis.
+\end{abstract}
+
+\vspace{0.5em}
+\noindent\textbf{Keywords:} anime, MyAnimeList, exploratory data analysis, data visualization, recommendation systems
+
+\tableofcontents
+\newpage
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Background}
+
+MyAnimeList, founded in 2004, is the de facto standard platform for tracking and rating anime. With over 15 million registered users, its community-driven scoring system aggregates individual ratings into weighted averages that serve as proxy measures of perceived quality. Understanding the statistical properties of this scoring system---its biases, distributions, and correlations---is valuable for recommendation engines, market research, and cultural analysis of the anime industry.
+
+\subsection{Objectives}
+
+This analysis addresses the following research questions:
+
+\begin{enumerate}[leftmargin=2em]
+    \item How are anime scores distributed, and what biases exist in community ratings?
+    \item How has anime production volume and quality changed over time?
+    \item What is the relationship between popularity (members) and perceived quality (score)?
+    \item Which genres, studios, and source materials are associated with higher ratings?
+    \item Can we identify systematically underrated (``hidden gem'') and overrated titles?
+\end{enumerate}
+
+\subsection{Data Collection}
+
+Data was collected using the Jikan REST API~(v4), an unofficial wrapper around MAL's database. We iterated through all pages of the \texttt{/top/anime} endpoint, collecting 25 entries per page across 1,192 pages, yielding \textbf{29,786 anime entries} with 24 features each.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Data Overview \& Quality Assessment}
+\label{sec:data}
+
+\subsection{Dataset Schema}
+
+The dataset contains 29,786 rows and 24 columns encompassing identifiers (\texttt{mal\_id}, \texttt{title}), categorical metadata (\texttt{type}, \texttt{source}, \texttt{rating}), temporal fields (\texttt{aired}, \texttt{season}, \texttt{year}), community metrics (\texttt{score}, \texttt{scored\_by}, \texttt{members}, \texttt{favorites}), multi-valued tags (\texttt{genres}, \texttt{themes}, \texttt{studios}), and text (\texttt{synopsis}).
+
+\subsection{Missing Data Profile}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{01_missing_data.png}
+    \caption{Percentage of missing values by column, sorted by missingness. Features exhibit structured missingness across three tiers: near-complete ($>$95\%), moderate (20--56\%), and severe ($\sim$78\%).}
+    \label{fig:missing}
+\end{figure}
+
+The dataset exhibits structured missingness (\figref{fig:missing}). The \texttt{season} and \texttt{year} columns show $\sim$78\% missingness because the API only populates these for TV series with specific seasonal premieres. We addressed this by extracting year information from the \texttt{aired} string field, recovering year data for 97\% of entries. The 34.4\% missingness in \texttt{score} reflects $\sim$10,241 anime with insufficient ratings; all score-dependent analyses use the scored subset ($n = 19{,}545$) unless otherwise noted.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Score Distribution Analysis}
+\label{sec:scores}
+
+\subsection{Overall Distribution}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{02_score_distribution.png}
+    \caption{Left: Histogram with mean/median lines showing the score distribution across 19,545 rated anime. Right: Box plots showing score distributions across anime format types.}
+    \label{fig:score_dist}
+\end{figure}
+
+The score distribution across 19,545 rated anime (\figref{fig:score_dist}, left) exhibits a negative skew (skew $= -0.28$), summarized in \tabref{tab:score_stats}.
+
+\begin{table}[H]
+    \centering
+    \caption{Summary statistics for anime scores ($n = 19{,}545$).}
+    \label{tab:score_stats}
+    \begin{tabular}{lc}
+        \toprule
+        \textbf{Statistic} & \textbf{Value} \\
+        \midrule
+        Mean ($\mu$)   & 6.39 \\
+        Median         & 6.36 \\
+        Std.\ Dev.\ ($\sigma$) & 0.93 \\
+        Skewness       & $-0.28$ \\
+        Min            & 1.89 \\
+        Max            & 9.28 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Score Percentiles}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{03_score_percentiles.png}
+    \caption{Score at key percentiles. A score of 7.0 already falls in the top 25\%, and 8.43 places a title in the top 1\%.}
+    \label{fig:percentiles}
+\end{figure}
+
+The percentile analysis (\figref{fig:percentiles}) reveals a remarkably narrow interquartile range of just 1.25 points (P25 $= 5.77$, P75 $= 7.02$), meaning genuine quality differentiation occurs only at the extremes. An anime scoring 7.0 is already in the \textbf{top 25\%}, and a score of 8.43 places it in the \textbf{top 1\%} of all rated anime.
+
+\subsection{Score by Anime Type}
+
+Score distributions vary meaningfully by format (\figref{fig:score_dist}, right). TV series score highest on average ($\mu = 6.83$, $n = 5{,}288$), likely reflecting selection bias: TV series require substantial investment and receive broader viewership. Movies show the widest variance, spanning theatrical masterpieces to low-budget direct-to-video releases. Music videos (5.96) and commercials (5.69) score lowest, consistent with their limited narrative scope.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Type Composition}
+\label{sec:types}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{04_type_breakdown.png}
+    \caption{Left: Donut chart of anime count by type. Right: Mean score with sample sizes. TV dominates at 29.0\%.}
+    \label{fig:type_breakdown}
+\end{figure}
+
+TV series dominate at 29.0\% of all entries (\figref{fig:type_breakdown}), despite being the most resource-intensive format. Movies (16.8\%), ONA (14.5\%), and OVA (14.2\%) each constitute roughly equal shares. The ONA share at 14.5\% is notable---this format has grown rapidly with the rise of streaming platforms, and its average score (6.26) suggests the format is still establishing quality benchmarks.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Temporal Analysis}
+\label{sec:temporal}
+
+\subsection{Production Volume Over Time}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{05_temporal_trends.png}
+    \caption{Top: Anime production count per year with peak annotation. Bottom: Mean score with $\pm 1\sigma$ band. Production peaked at 1,267 titles in 2017.}
+    \label{fig:temporal}
+\end{figure}
+
+Anime production followed an exponential growth curve (\figref{fig:temporal}), peaking at \textbf{1,267 titles in 2017}. The mean score trends upward over time, likely a survivorship/attention bias: older titles with low scores are less frequently rated on MAL.
+
+\subsection{Decade-Level Analysis}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{06_decade_analysis.png}
+    \caption{Left: Anime count by decade showing $\sim$27$\times$ growth. Right: Violin plots showing score distribution evolution by decade.}
+    \label{fig:decade}
+\end{figure}
+
+The decade view (\figref{fig:decade}) quantifies the production explosion: from 397 titles in the 1960s to 10,847 in the 2010s ($\sim$27$\times$ growth). The violin plots reveal an interesting evolution---earlier decades show wider, more variable distributions, while modern decades converge toward tighter, unimodal shapes centered around 6.0--6.5.
+
+\subsection{Seasonal Patterns}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{07_seasonal_patterns.png}
+    \caption{Left: Anime release count by season. Right: Mean score by season. Differences are minimal ($\Delta_{\max} = 0.07$).}
+    \label{fig:seasonal}
+\end{figure}
+
+Among the 6,421 titles with season metadata (\figref{fig:seasonal}), Spring (2,040) and Fall (1,849) are the dominant premiere seasons, aligning with the Japanese TV calendar. Score differences across seasons are negligible ($\Delta_{\max} = 0.07$), suggesting season of release is not a meaningful predictor of quality.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Genre Ecosystem Analysis}
+\label{sec:genres}
+
+\subsection{Genre Frequency and Quality}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{08_genre_analysis.png}
+    \caption{Left: Top 20 genres by count. Right: Top 20 genres by mean score (min.\ 50 entries) with $\pm 1\sigma$ error bars.}
+    \label{fig:genres}
+\end{figure}
+
+A striking inverse relationship emerges in \figref{fig:genres}: the most produced genres (Comedy at 7,929; Fantasy at 6,134; Action at 4,927) are \textbf{not} the highest rated. Comedy ranks 16th in average score (6.48). Conversely, niche genres like ``Award Winning'' (7.30) and ``Suspense'' (7.00) achieve higher means because they are selectively tagged and represent curated subsets.
+
+\subsection{Genre Co-occurrence}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.78\textwidth]{09_genre_cooccurrence.png}
+    \caption{Lower-triangle heatmap of co-occurrence frequency among the top 12 genres.}
+    \label{fig:cooccurrence}
+\end{figure}
+
+The co-occurrence matrix (\figref{fig:cooccurrence}) reveals the structural grammar of anime genre tagging. Action $\times$ Adventure (2,364) and Action $\times$ Fantasy (2,105) are the most common pairings, reflecting the sh\=onen archetype. Comedy $\times$ Romance (991) forms the romcom cluster. Notably, Slice of Life rarely co-occurs with Action (8 times), confirming fundamentally different narrative approaches.
+
+\subsection{Genre Evolution Over Time}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{10_genre_trends.png}
+    \caption{Grouped bar chart showing top 6 genre frequencies by decade. Comedy has dominated throughout, but Fantasy overtook Sci-Fi since the 2000s.}
+    \label{fig:genre_trends}
+\end{figure}
+
+The temporal evolution of genres (\figref{fig:genre_trends}) tracks broader cultural shifts. Comedy has dominated across all decades, Fantasy has overtaken Sci-Fi since the 2000s (coinciding with the isekai boom), and Sci-Fi peaked in relative terms during the 1980s--1990s cyberpunk era.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Studio Analysis}
+\label{sec:studios}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{11_studio_analysis.png}
+    \caption{Left: Top 20 studios by total output. Right: Top 20 studios by mean score (min.\ 20 titles). None of the top 5 producers by volume appear in the top 10 by quality.}
+    \label{fig:studios}
+\end{figure}
+
+Toei Animation leads in volume ($\sim$920 titles), but the quality leaders tell a different story (\figref{fig:studios}). \textbf{Kyoto Animation} stands out with the best combination of volume and quality---132 titles averaging 7.36. Maintaining such a high mean across a large portfolio is statistically remarkable, suggesting institutional excellence rather than a few breakout hits. MAPPA (7.19, $n=109$) and Wit Studio (7.17, $n=98$) represent the modern wave of high-quality studios.
+
+\begin{table}[H]
+    \centering
+    \caption{Top 5 studios by quality (min.\ 20 titles) vs.\ top 5 by volume.}
+    \label{tab:studios}
+    \begin{tabular}{llc|llc}
+        \toprule
+        \multicolumn{3}{c|}{\textbf{By Quality}} & \multicolumn{3}{c}{\textbf{By Volume}} \\
+        \textbf{Studio} & $\boldsymbol{\mu}$ & $\boldsymbol{n}$ & \textbf{Studio} & \textbf{Count} & $\boldsymbol{\mu}$ \\
+        \midrule
+        Shuka              & 7.67 & 24  & Toei Animation   & $\sim$920 & --- \\
+        Kyoto Animation    & 7.36 & 132 & Sunrise          & $\sim$560 & --- \\
+        David Production   & 7.30 & 51  & J.C.Staff        & $\sim$470 & --- \\
+        Bones              & 7.29 & 160 & TMS Entertainment & $\sim$410 & --- \\
+        Lerche             & 7.29 & 67  & Madhouse         & $\sim$400 & --- \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Popularity--Quality Relationship}
+\label{sec:popularity}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{12_popularity_vs_quality.png}
+    \caption{Scatter plots with OLS regression lines. Left: $\log_{10}(\text{Members})$ vs.\ Score ($r = 0.676$). Right: $\log_{10}(\text{Favorites})$ vs.\ Score ($r = 0.666$). Both significant at $p < 0.001$.}
+    \label{fig:popularity}
+\end{figure}
+
+The relationship between popularity and quality is \textbf{moderately strong and positive} (\figref{fig:popularity}), with $r = 0.676$ for members and $r = 0.666$ for favorites. The OLS regression slope of 0.65 means that a 10$\times$ increase in members is associated with a $\sim$0.65-point increase in score. This correlation likely operates bidirectionally: good anime attract more members, and larger communities provide more stable (and slightly upward-biased) scoring.
+
+\subsection{Most Popular Anime}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{13_most_popular.png}
+    \caption{Top 30 anime by member count with alternating colors. These ``gateway'' titles share characteristics: action-oriented, widely available on international streaming, and culturally mainstream.}
+    \label{fig:popular}
+\end{figure}
+
+The most popular titles (\figref{fig:popular}) are dominated by gateway anime: Shingeki no Kyojin ($\sim$4.5M members), Death Note ($\sim$4.4M), and Fullmetal Alchemist: Brotherhood ($\sim$3.7M). These share common characteristics---action-oriented, widely available on international streaming platforms, and achieving mainstream cultural penetration.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Episode Count Analysis}
+\label{sec:episodes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{14_episodes_duration.png}
+    \caption{Left: Episode count distribution (capped at 100; median $= 2$). Right: Mean score by episode count bracket with sample sizes.}
+    \label{fig:episodes}
+\end{figure}
+
+The episode count distribution is heavily right-skewed with a median of just 2 (\figref{fig:episodes}). Score varies meaningfully by bracket: the \textbf{14--26 episode (2-cour) format achieves the highest average score} (6.90, $n = 1{,}545$), suggesting this format offers the optimal balance of narrative depth and production quality. Single-episode entries score lowest (6.14), dragged down by specials and music videos. The dip at 500+ episodes (6.33, $n = 20$) reflects quality dilution in very long-running series.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Source Material Analysis}
+\label{sec:source}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{15_source_material.png}
+    \caption{Left: Top 10 source materials by count. Right: Mean score by source (min.\ 30 entries). Adapted works systematically outperform originals.}
+    \label{fig:source}
+\end{figure}
+
+Source material significantly predicts anime quality (\figref{fig:source}). \textbf{Adapted works score higher than originals}: web novels lead (7.10), followed by light novels (6.83) and manga (6.80). Original anime (6.34), despite being the most common source ($\sim$13,000 entries), includes everything from visionary auteur works to low-budget experiments. Adaptation acts as a quality filter---only source material with proven popularity gets animated.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Content Rating Analysis}
+\label{sec:rating}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{16_rating_analysis.png}
+    \caption{Left: Count by content rating. Right: Score distribution (box plots) by content rating. R-17+ achieves the highest median score.}
+    \label{fig:rating}
+\end{figure}
+
+PG-13 is overwhelmingly dominant ($\sim$8,500 entries), reflecting anime's primary demographic (\figref{fig:rating}). R-17+ (violence \& profanity) achieves the \textbf{highest median score}, suggesting that mature content correlates with narrative ambition. G---All Ages shows wide variance, spanning children's masterpieces to low-effort shorts.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Top and Bottom Rated Anime}
+\label{sec:topbottom}
+
+\subsection{Highest Rated}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{17_top25_anime.png}
+    \caption{The 25 highest-rated anime on MyAnimeList. Gintama alone occupies 7 of 25 positions across its various seasons.}
+    \label{fig:top25}
+\end{figure}
+
+The top 25 (\figref{fig:top25}) is dominated by sequels and franchise entries---\textbf{Gintama occupies 7 of 25 positions}. This franchise inflation occurs because sequel audiences are self-selecting (only fans continue watching), producing upward-biased scores. Sousou no Frieren leads at 9.28, followed by its second season (9.22).
+
+\subsection{Lowest Rated}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{18_bottom25_anime.png}
+    \caption{The 25 lowest-rated anime. Many are watched specifically for their notoriety as legendarily bad titles.}
+    \label{fig:bottom25}
+\end{figure}
+
+The bottom of the rankings (\figref{fig:bottom25}) contains titles that have achieved notoriety for their poor quality. Tenkuu Danzai Skelter+Heaven (1.89) holds the lowest score. Ex-Arm (2.87) is a notable modern entry, widely regarded as a cautionary tale in CGI anime production.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Hidden Gems and Overrated Titles}
+\label{sec:gems}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{19_hidden_gems.png}
+    \caption{Left: Hidden gems (score $\geq$ 8.0, members below median). Right: Most popular titles with the lowest scores (top 10\% members, score $< 7.0$).}
+    \label{fig:gems}
+\end{figure}
+
+\subsection{Hidden Gems}
+
+Titles scoring $\geq 8.0$ with below-median member counts represent underappreciated quality (\figref{fig:gems}, left). A clear pattern emerges: the hidden gems are predominantly \textbf{Chinese donghua} (Fanren Xiu Xian Zhuan series, Yi Nian Yong Heng), which receive high scores from dedicated fanbases but lack broad Western audiences. This represents a systematic discovery gap on MAL.
+
+\subsection{Overrated Titles}
+
+Titles in the top 10\% by members but scoring below 7.0 (\figref{fig:gems}, right) include Pupa (3.34), Boku no Pico (3.67), and School Days (5.56). These achieve high member counts through \textbf{notoriety rather than quality}---they are discussed, memed, and hate-watched, inflating community engagement without corresponding quality.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Thematic Analysis}
+\label{sec:themes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{20_themes_analysis.png}
+    \caption{Left: Top 20 themes by count. Right: Top 20 themes by mean score (min.\ 30 entries). Iyashikei (healing anime) tops quality rankings.}
+    \label{fig:themes}
+\end{figure}
+
+The most common themes (\figref{fig:themes}) reflect anime's core storytelling pillars: Music (5,400+), School (2,400+), Historical (1,700+), and Mecha (1,300+). The highest-rated themes tell a different story: \textbf{Iyashikei} (healing anime; 7.45) tops the quality rankings, followed by Childcare (7.38) and Love Polygon (7.32). The dominance of Iyashikei---characterized by gentle pacing and emotional warmth---has implications for recommendation systems: users seeking high-satisfaction viewing should be directed toward this genre even if it doesn't match typical action-oriented preferences.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Key Findings and Discussion}
+\label{sec:discussion}
+
+\subsection{Summary of Findings}
+
+\begin{table}[H]
+    \centering
+    \caption{Summary of key analytical findings.}
+    \label{tab:summary}
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Finding} & \textbf{Detail} \\
+        \midrule
+        Score compression & IQR $= 1.25$ points (5.77--7.02); a score of 7.0 is already top 25\% \\
+        Production explosion & $\sim$27$\times$ growth from 1960s (397) to 2010s (10,847), peaking at 1,267 in 2017 \\
+        Format matters & 2-cour (14--26 eps) achieves the highest mean score (6.90) \\
+        Adaptation premium & Adapted works systematically outperform originals \\
+        Studio consistency & Kyoto Animation: 132 titles at $\mu = 7.36$ (institutional excellence) \\
+        Genre paradox & Most produced genres $\neq$ highest rated \\
+        Popularity--quality link & $r = 0.676$ (strong positive correlation) \\
+        Discovery gap & Chinese donghua systematically underrepresented despite high scores \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Limitations}
+
+Several limitations should be considered:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Survivorship bias:} Older titles that are poorly rated receive fewer ratings and may not appear in the dataset.
+    \item \textbf{Self-selection in scoring:} Only users who choose to rate contribute, introducing engagement bias.
+    \item \textbf{Franchise inflation:} Sequel seasons inherit self-selected audiences, inflating top rankings.
+    \item \textbf{Western bias:} MAL's user base skews Western; Japanese domestic reception may differ significantly.
+    \item \textbf{Temporal snapshot:} This data represents a single point in time; scores evolve as community composition changes.
+\end{itemize}
+
+\subsection{Recommendations}
+
+For \textbf{recommendation systems}: incorporate popularity-adjusted scoring to surface hidden gems. Weight iyashikei and donghua titles higher for users who rate literary/artistic anime highly.
+
+For \textbf{industry analysts}: the 2-cour format and manga/light novel adaptations represent the most reliable formula for critical success. Studios should note that quality consistency (as exemplified by Kyoto Animation) builds lasting brand value.
+
+For \textbf{future research}: longitudinal analysis of score evolution, network analysis of genre co-occurrences, and NLP-based sentiment analysis of synopsis text could deepen these findings.
+
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Technical Appendix}
+\label{sec:appendix}
+
+\subsection{Tools and Libraries}
+
+\begin{table}[H]
+    \centering
+    \caption{Software stack used for data collection and analysis.}
+    \label{tab:tools}
+    \begin{tabular}{llp{7cm}}
+        \toprule
+        \textbf{Tool} & \textbf{Version} & \textbf{Purpose} \\
+        \midrule
+        Python       & 3.11+  & Primary language \\
+        pandas       & 2.x    & Data manipulation \\
+        matplotlib   & 3.x    & Base plotting \\
+        seaborn      & 0.13+  & Statistical visualization \\
+        scipy        & 1.x    & Statistical testing \\
+        wordcloud    & 1.9+   & Text visualization \\
+        requests     & 2.x    & HTTP client (Jikan API) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Reproducibility}
+
+All code is available in the repository:
+
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{mal\_jikan\_scraper.py} --- Data collection via Jikan API ($\sim$1 hour for full scrape)
+    \item \texttt{data.ipynb} --- Complete analysis pipeline generating all figures ($\sim$30 seconds)
+    \item \texttt{mal\_top\_anime.csv} --- Raw dataset (29,786 $\times$ 24)
+\end{itemize}
+
+\vspace{2em}
+\noindent\rule{\textwidth}{0.4pt}
+\begin{center}
+    \small\textcolor{midgray}{Analysis conducted February 2026. All figures generated at 300 DPI.\\
+    Data sourced from MyAnimeList via Jikan API v4.}
+\end{center}
+
+\end{document}
